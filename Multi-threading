@@ -1116,3 +1116,93 @@ public class DeadlockDemo {
 }
 
 to remove deadlock thread1 and thread2 must acquire locks in same order
+--------------------------------------------------------------------------------
+Why We Use Runnable Interface Compared to Thread Class
+Separation of Concerns:
+Runnable Interface: It separates the task that needs to be performed from the thread that executes it. This is more flexible as it allows you to decouple task definition from task execution.
+Thread Class: By extending Thread, you tie the task directly to the thread of execution, which is less flexible and not recommended in scenarios where you want to use multiple inheritance or follow a more modular design.
+
+Multiple Inheritance:
+Runnable Interface: Java does not support multiple inheritance of classes, but it does support multiple inheritance of interfaces. By implementing Runnable, a class can still extend another class.
+Thread Class: If you extend Thread, your class cannot extend any other class, limiting its inheritance capabilities.
+
+Resource Sharing:
+Runnable Interface: It is easier to share resources among multiple threads because you can create multiple threads that share the same Runnable instance.
+Thread Class: Each thread instance has its own instance variables which might make resource sharing more complex.
+
+Thread Pooling:
+Runnable Interface: It is more suitable for thread pooling, where you submit tasks to be executed by a pool of threads.
+Thread Class: Managing thread pooling with the Thread class can be cumbersome.
+
+Example of Using Runnable Interface
+class MyTask implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Task is running...");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Thread thread = new Thread(new MyTask());
+        thread.start();
+    }
+}
+------------------------------------------------------------------------------------
+What Should We Do to Avoid Deadlocks
+
+Lock Ordering:
+Ensure that all threads acquire locks in the same predefined order. This prevents circular wait conditions which are necessary for a deadlock to occur.
+
+Lock Timeout:
+Use timed locks (e.g., tryLock with a timeout in java.util.concurrent.locks.Lock) to avoid waiting indefinitely. If a thread cannot acquire a lock within the specified time, it releases all the locks it holds.
+
+Deadlock Detection:
+Implement deadlock detection algorithms that can periodically check for deadlocks and take corrective actions.
+
+Minimize Lock Scope:
+Keep the synchronized sections as small as possible to reduce the chance of contention and potential deadlocks.
+
+Avoid Nested Locks:
+Try to avoid situations where a thread needs to acquire multiple locks. If unavoidable, ensure that the locks are always acquired in the same order.
+
+Use Concurrency Utilities:
+Use high-level concurrency utilities from java.util.concurrent package, such as ExecutorService, Semaphore, and CountDownLatch, which are designed to handle many common concurrency patterns and can help avoid low-level lock management.
+
+
+Example of Avoiding Deadlock
+class Resource {
+    private final Lock lock = new ReentrantLock();
+
+    public void use() {
+        lock.lock();
+        try {
+            // Resource usage logic
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Resource resource1 = new Resource();
+        Resource resource2 = new Resource();
+
+        Runnable task1 = () -> {
+            resource1.use();
+            resource2.use();
+        };
+
+        Runnable task2 = () -> {
+            resource2.use();
+            resource1.use();
+        };
+
+        Thread thread1 = new Thread(task1);
+        Thread thread2 = new Thread(task2);
+
+        thread1.start();
+        thread2.start();
+    }
+}
