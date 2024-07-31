@@ -1,0 +1,1143 @@
+Databases
+================================================
+CREATE DATABASE myDB;
+
+USE myDB;
+
+DROP DATABASE myDB;
+
+make the data base read only : ALTER DATABASE myDB READ ONLY=1;
+we cannot do any kind of operations like create,insert,delete,update data and can't even drop the Database if READ ONLY=1.
+to make it not readonly we can make it READ ONLY=0;
+----------------------------------------------------
+
+DDL - CREATE
+      DROP
+      ALTER
+      RENAME
+      TRUNCATE
+
+create table--- CREATE TABLE data (
+                id INT PRIMARY KEY,
+                name VARCHAR(50)
+            );
+
+drop table --- DROP TABLE data;
+
+rename table --- RENAME TABLE data TO user;
+
+add extra COLUMN--- ALTER TABLE data ADD COLUMN email VARCHAR(50);
+
+modify COLUMN ---- ALTER TABLE data MODIFY COLUMN email VARCHAR(20);
+
+shifting COLUMN --- ALTER TABLE data MODIFY email VARCHAR(20) AFTER id;
+
+modify COLUMN to 1st --- ALTER TABLE data MODIFY email VARCHAR(20) FIRST;
+
+add constraints ---  ALTER TABLE data ADD CONSTRAINT UNIQUE(email);
+
+drop COLUMN --- ALTER TABLE data DROP COLUMN email;   // schema will be dropped
+
+truncate data --- TRUNCATE TABLE data;     //all the data will be deleted, we cannot rollback
+
+--------------------------------------------------------
+
+DML - INSERT
+      UPDATE
+      DELETE
+
+insert data --- INSERT INTO data(name) values("kavya");   //if we add data for some coloums
+                INSERT INTO data values(1,"sri");         //if we add data to all coloumns
+                INSERT INTO data                       //for adding multiple rows
+                    values (2,"kick"),
+                           (3,"shinchan"),
+                           (4,"henry");
+
+update table --- UPDATE data SET id=1 where id is null;   //updating one coloum
+                 UPDATE data SET id=1;    //updating all rows in one coloum;
+                 UPDATE data SET id=1,name="kavya" where id is null;  //updating multiple coloumns
+
+delete from table --- DELETE FROM data; //will delete all the data from table
+                      DELETE FROM data WHERE id=1;  //will delete data having that id
+
+-------------------------------------------------------
+
+DQL - SELECT
+      SELECT * FROM data;
+      SELECT id FROM data;
+      SELECT id FROM data where name="sri";
+      SELECT * FROM data where id >=2;
+      SELECT * FROM data where id!=3;
+      SELECT * FROM data where id IN(2,3,4);
+      SELECT * FROM data where id IS NULL;
+      SELECT * FROM data where id IS NOT NULL;
+
+-------------------------------------------------------
+
+AUTOCOMMIT, COMMIT, ROLLBACK
+
+SET AUTOCOMMIT=OFF  -- transactions will not save automatically, we need to manually save each transaction
+COMMIT; --- this is save point
+ex: if we delete the table after setting autocommit to off and then commit, we can roll back;
+   DELETE FROM data;   //data will be dropped but we can roll back
+   ROLLBACK;       // data will be rolled back
+
+   DELETE FROM data;
+   COMMIT;     //we can't roll back
+
+--------------------------------------------------------
+
+CURRENT_DATE() & CURRENT_TIME()
+
+CREATE TABLE sample_table (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    current_date DATE,
+    current_time TIME,
+    current_timestamp DATETIME
+);
+
+INSERT INTO sample_table (current_date, current_time, current_timestamp)
+VALUES (CURRENT_DATE(), CURRENT_TIME(), NOW());
+
+we can do CURRENT_DATE()+1 or CURRENT_DATE()-1 like that
+
+--------------------------------------------------------------
+
+PRIMARY KEY: Ensures that the column(s) specified must contain unique values and cannot be NULL. Each table can have only one primary key.
+
+AUTO_INCREMENT (MySQL), SERIAL (PostgreSQL), IDENTITY (SQL Server, Oracle): Automatically generates a unique value for the column when a new row is inserted.
+
+NOT NULL: Ensures that the column cannot contain NULL values.
+
+UNIQUE: Ensures that all values in the column are different.
+
+CHECK: Ensures that all values in the column satisfy a specific condition. Note: Not all databases support CHECK constraints (e.g., MySQL had limited support prior to version 8.0.16).
+
+FOREIGN KEY: Ensures that the value in a column (or group of columns) matches the value in a column of another table, maintaining referential integrity.
+
+Example Scenario with Two Tables
+To illustrate the use of FOREIGN KEY, let's create a departments table that the employees table will reference.
+
+CREATE TABLE departments (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- PRIMARY KEY and AUTO_INCREMENT
+    name VARCHAR(100) NOT NULL                  -- NOT NULL
+);
+
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- PRIMARY KEY and AUTO_INCREMENT
+    first_name VARCHAR(50) NOT NULL,            -- NOT NULL
+    last_name VARCHAR(50) NOT NULL,             -- NOT NULL
+    email VARCHAR(100) UNIQUE,                  -- UNIQUE
+    salary DECIMAL(10, 2) CHECK (salary > 0),   -- CHECK
+    department_id INT,
+    current_timestamp DATETIME DEFAULT NOW(),
+    FOREIGN KEY (department_id) REFERENCES departments(id) -- FOREIGN KEY
+);
+
+ALTER TABLE employees ADD CONSTRAINT check_salary CHECK (salary > 0); //adding constraint to already existed table
+
+----------------------------------------------------------
+
+JOINS
+
+departments
+sql
+Copy code
+CREATE TABLE departments (
+    id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO departments (id, name) VALUES
+(1, 'HR'),
+(2, 'Engineering'),
+(3, 'Marketing');
+employees
+sql
+Copy code
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+INSERT INTO employees (id, first_name, last_name, department_id) VALUES
+(1, 'John', 'Doe', 1),
+(2, 'Jane', 'Smith', 2),
+(3, 'Sam', 'Brown', NULL),
+(4, 'Sue', 'Green', 3);
+
+INNER JOIN
+Returns only the rows that have matching values in both tables.
+
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM employees
+INNER JOIN departments ON employees.department_id = departments.id;
+
+Result:
++----+------------+-----------+-------------+
+| id | first_name | last_name | department  |
++----+------------+-----------+-------------+
+|  1 | John       | Doe       | HR          |
+|  2 | Jane       | Smith     | Engineering |
+|  4 | Sue        | Green     | Marketing   |
++----+------------+-----------+-------------+
+
+LEFT JOIN
+Returns all rows from the left table and the matched rows from the right table. If no match is found, NULLs are returned for columns from the right table.
+
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM employees
+LEFT JOIN departments ON employees.department_id = departments.id;
+
+Result:
++----+------------+-----------+-------------+
+| id | first_name | last_name | department  |
++----+------------+-----------+-------------+
+|  1 | John       | Doe       | HR          |
+|  2 | Jane       | Smith     | Engineering |
+|  3 | Sam        | Brown     | NULL        |
+|  4 | Sue        | Green     | Marketing   |
++----+------------+-----------+-------------+
+
+RIGHT JOIN
+Returns all rows from the right table and the matched rows from the left table. If no match is found, NULLs are returned for columns from the left table.
+
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM employees
+RIGHT JOIN departments ON employees.department_id = departments.id;
+
+Result:
++----+------------+-----------+-------------+
+| id | first_name | last_name | department  |
++----+------------+-----------+-------------+
+|  1 | John       | Doe       | HR          |
+|  2 | Jane       | Smith     | Engineering |
+|  4 | Sue        | Green     | Marketing   |
+| NULL | NULL     | NULL      | NULL        |
++----+------------+-----------+-------------+
+
+FULL OUTER JOIN
+Returns all rows when there is a match in one of the tables. If there is no match, the result is NULL on the side that does not have a match.
+
+Note: Full Outer Join is not supported in some databases like MySQL directly. It can be emulated using a combination of LEFT JOIN, RIGHT JOIN, and UNION.
+
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM employees
+FULL OUTER JOIN departments ON employees.department_id = departments.id
+ORDER BY employees.id;
+
+In MySQL, you can use:
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM employees
+LEFT JOIN departments ON employees.department_id = departments.id
+UNION
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM departments
+RIGHT JOIN employees ON employees.department_id = departments.id;
+Result:
++----+------------+-----------+-------------+
+| id | first_name | last_name | department  |
++----+------------+-----------+-------------+
+|  1 | John       | Doe       | HR          |
+|  2 | Jane       | Smith     | Engineering |
+|  3 | Sam        | Brown     | NULL        |
+|  4 | Sue        | Green     | Marketing   |
+| NULL | NULL     | NULL      | NULL        |
++----+------------+-----------+-------------+
+
+CROSS JOIN
+Returns the Cartesian product of the two tables, i.e., it returns all possible combinations of rows from both tables.
+
+SELECT employees.id, employees.first_name, employees.last_name, departments.name AS department
+FROM employees
+CROSS JOIN departments;
+
+Result:
++----+------------+-----------+-------------+
+| id | first_name | last_name | department  |
++----+------------+-----------+-------------+
+|  1 | John       | Doe       | HR          |
+|  1 | John       | Doe       | Engineering |
+|  1 | John       | Doe       | Marketing   |
+|  2 | Jane       | Smith     | HR          |
+|  2 | Jane       | Smith     | Engineering |
+|  2 | Jane       | Smith     | Marketing   |
+|  3 | Sam        | Brown     | HR          |
+|  3 | Sam        | Brown     | Engineering |
+|  3 | Sam        | Brown     | Marketing   |
+|  4 | Sue        | Green     | HR          |
+|  4 | Sue        | Green     | Engineering |
+|  4 | Sue        | Green     | Marketing   |
++----+------------+-----------+-------------+
+
+--------------------------------------------------------
+
+Aggregate Functions
+==================
+These functions operate on a set of values and return a single value.
+
+COUNT()
+Returns the number of rows that match a specified condition.
+SELECT COUNT(*) AS total_employees FROM employees;
+
+SUM()
+Returns the sum of a numeric column.
+SELECT SUM(salary) AS total_salary FROM employees;
+
+AVG()
+Returns the average value of a numeric column.
+SELECT AVG(salary) AS average_salary FROM employees;
+
+MAX()
+Returns the maximum value in a set.
+SELECT MAX(salary) AS highest_salary FROM employees;
+
+MIN()
+Returns the minimum value in a set.
+SELECT MIN(salary) AS lowest_salary FROM employees;
+
+String Functions
+================
+CONCAT()
+Concatenates two or more strings.
+SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;
+
+LENGTH()
+Returns the length of a string.
+SELECT LENGTH(first_name) AS first_name_length FROM employees;
+
+LOWER()
+Converts a string to lowercase.
+SELECT LOWER(first_name) AS lower_first_name FROM employees;
+
+UPPER()
+Converts a string to uppercase.
+SELECT UPPER(first_name) AS upper_first_name FROM employees;
+
+SUBSTRING() / SUBSTR()
+Extracts a substring from a string (starting at any position).
+-- MySQL
+SELECT SUBSTRING(first_name, 1, 3) AS short_first_name FROM employees;
+
+-- PostgreSQL / SQL Server
+SELECT SUBSTRING(first_name FROM 1 FOR 3) AS short_first_name FROM employees;
+
+Date Functions
+==============
+CURRENT_DATE()
+Returns the current date.
+SELECT CURRENT_DATE() AS today;
+
+CURRENT_TIME()
+Returns the current time.
+SELECT CURRENT_TIME() AS now;
+
+NOW() / CURRENT_TIMESTAMP()
+Returns the current date and time.
+SELECT NOW() AS current_date_time;
+
+DATE_ADD() / DATEADD()
+Adds a specified time interval to a date.
+-- MySQL
+SELECT DATE_ADD(NOW(), INTERVAL 7 DAY) AS next_week;
+
+-- PostgreSQL
+SELECT NOW() + INTERVAL '7 days' AS next_week;
+
+-- SQL Server
+SELECT DATEADD(day, 7, GETDATE()) AS next_week;
+
+DATEDIFF()
+Returns the difference between two dates.
+-- MySQL / SQL Server
+SELECT DATEDIFF(NOW(), '2024-01-01') AS days_since_new_year;
+
+-- PostgreSQL
+SELECT (NOW()::date - '2024-01-01'::date) AS days_since_new_year;
+
+Numeric Functions
+=================
+ROUND()
+Rounds a numeric field to the specified number of decimal places.
+SELECT ROUND(salary, 2) AS rounded_salary FROM employees;
+
+CEIL() / CEILING()
+Returns the smallest integer value that is greater than or equal to a number.
+SELECT CEIL(salary) AS ceil_salary FROM employees;
+
+FLOOR()
+Returns the largest integer value that is less than or equal to a number.
+SELECT FLOOR(salary) AS floor_salary FROM employees;
+
+ABS()
+Returns the absolute value of a number.
+SELECT ABS(salary) AS absolute_salary FROM employees;
+
+Example Scenario
+Using a combination of these functions, let's retrieve some useful information from our employees table.
+
+SELECT 
+    CONCAT(first_name, ' ', last_name) AS full_name,
+    ROUND(salary, 2) AS rounded_salary,
+    LENGTH(first_name) AS first_name_length,
+    LOWER(email) AS lower_email,
+    DATEDIFF(NOW(), '2023-01-01') AS days_since_start_of_year
+FROM 
+    employees;
+This query will provide a comprehensive view of each employee's full name, rounded salary, length of their first name, email in lowercase, and the number of days since the start of the year.
+
+-----------------------------------------------------------------
+
+AND, OR, NOT
+
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    department VARCHAR(50) NOT NULL,
+    salary DECIMAL(10, 2)
+);
+
+INSERT INTO employees (id, first_name, last_name, department, salary) VALUES
+(1, 'John', 'Doe', 'HR', 60000),
+(2, 'Jane', 'Smith', 'Engineering', 50000),
+(3, 'Sam', 'Brown', 'Marketing', 45000),
+(4, 'Sue', 'Green', 'Engineering', 70000),
+(5, 'Mike', 'Johnson', 'HR', 55000);
+Combined AND, OR, NOT Query
+Let's say we want to retrieve a list of employees who either:
+
+Work in the 'Engineering' department and have a salary greater than 60,000, or
+Do not work in the 'HR' department.
+
+Here's how we can write this query:
+SELECT
+    id,
+    first_name,
+    last_name,
+    department,
+    salary
+FROM
+    employees
+WHERE
+    (department = 'Engineering' AND salary > 60000)
+    OR
+    (NOT department = 'HR');
+
+Explanation
+The query selects the id, first_name, last_name, department, and salary columns from the employees table.
+The WHERE clause uses:
+AND to ensure the employee works in the 'Engineering' department and has a salary greater than 60,000.
+OR to include employees who do not work in the 'HR' department, using the NOT operator.
+
+Result
++----+------------+-----------+-------------+---------+
+| id | first_name | last_name | department  | salary  |
++----+------------+-----------+-------------+---------+
+|  3 | Sam        | Brown     | Marketing   | 45000.00|
+|  4 | Sue        | Green     | Engineering | 70000.00|
++----+------------+-----------+-------------+---------+
+
+------------------------------------------------------------
+
+Wild card characters
+
+Wildcard characters are used with the SQL LIKE operator to search for patterns within column values. The two most common wildcard characters are % (percent) and _ (underscore).
+
+% matches zero or more characters.
+_ matches exactly one character.
+
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    department VARCHAR(50) NOT NULL,
+    salary DECIMAL(10, 2)
+);
+
+INSERT INTO employees (id, first_name, last_name, department, salary) VALUES
+(1, 'John', 'Doe', 'HR', 60000),
+(2, 'Jane', 'Smith', 'Engineering', 50000),
+(3, 'Sam', 'Brown', 'Marketing', 45000),
+(4, 'Sue', 'Green', 'Engineering', 70000),
+(5, 'Mike', 'Johnson', 'HR', 55000);
+
+Example 1: Find employees whose first names start with 'J'
+SELECT
+    id,
+    first_name,
+    last_name,
+    department,
+    salary
+FROM
+    employees
+WHERE
+    first_name LIKE 'J%';
+
+Explanation: This query will return all employees whose first names start with the letter 'J'.
+
+Result
++----+------------+-----------+-------------+---------+
+| id | first_name | last_name | department  | salary  |
++----+------------+-----------+-------------+---------+
+|  1 | John       | Doe       | HR          | 60000.00|
+|  2 | Jane       | Smith     | Engineering | 50000.00|
++----+------------+-----------+-------------+---------+
+
+Example 2: Find employees whose last names end with 'n'
+
+SELECT
+    id,
+    first_name,
+    last_name,
+    department,
+    salary
+FROM
+    employees
+WHERE
+    last_name LIKE '%n';
+
+Explanation: This query will return all employees whose last names end with the letter 'n'.
+
+Result
++----+------------+-----------+-------------+---------+
+| id | first_name | last_name | department  | salary  |
++----+------------+-----------+-------------+---------+
+|  1 | John       | Doe       | HR          | 60000.00|
+|  4 | Sue        | Green     | Engineering | 70000.00|
+|  5 | Mike       | Johnson   | HR          | 55000.00|
++----+------------+-----------+-------------+---------+
+
+Using _ Wildcard
+Example: Find employees whose first names are four characters long and start with 'S'
+SELECT
+    id,
+    first_name,
+    last_name,
+    department,
+    salary
+FROM
+    employees
+WHERE
+    first_name LIKE 'S___';
+
+Explanation: This query will return all employees whose first names are exactly four characters long and start with the letter 'S'. Each _ represents a single character.
+
+Result
++----+------------+-----------+-------------+---------+
+| id | first_name | last_name | department  | salary  |
++----+------------+-----------+-------------+---------+
+|  3 | Sam        | Brown     | Marketing   | 45000.00|
++----+------------+-----------+-------------+---------+
+
+Combining Wildcards
+Example: Find employees whose last names contain 'o' as the second character
+
+SELECT
+    id,
+    first_name,
+    last_name,
+    department,
+    salary
+FROM
+    employees
+WHERE
+    last_name LIKE '_o%';
+
+Explanation: This query will return all employees whose last names have 'o' as the second character. The _ matches any single character, and % matches zero or more characters after 'o'.
+
+Result
++----+------------+-----------+-------------+---------+
+| id | first_name | last_name | department  | salary  |
++----+------------+-----------+-------------+---------+
+|  1 | John       | Doe       | HR          | 60000.00|
+|  5 | Mike       | Johnson   | HR          | 55000.00|
++----+------------+-----------+-------------+---------+
+
+----------------------------------------------------------------
+
+ORDER BY
+
+SELECT * FROM employees ORDER BY salary;   //default ascending order
+SELECT * FROM employees ORDER BY salary DESC;
+SELECT * FROM employees ORDER BY first_name,salary;
+
+----------------------------------------------------------------
+
+LIMIT
+
+SELECT * FROM employees LIMIT 1;  //display only one row
+SELECT * FROM employees ORDER BY salary LIMIT 1;   //1st row of ascending order by salary
+SELECT * FROM employees ORDER BY DESC salary LIMIT 1
+SELECT * FROM employees LIMIT 3,3;  //skips 1st three rows and displays next three rows
+
+-----------------------------------------------------------------
+
+UNION
+
+Combines results of 2 or more select statements
+
+SELECT * FROM employees UNION SELECT * FROM users;  //will return values of both tables without repetition if column are equals else throughs error
+SELECT first_name FROM employees UNION SELECT first_name FROM users;
+
+UNION ALL
+
+SELECT * FROM employees UNION ALL SELECT * FROM users;  //will return values of both tables with repetition if column are equals else throughs error
+
+---------------------------------------------------------------------
+
+SELF JOIN
+
+A self-join is a technique in SQL where a table is joined with itself. This is useful for querying hierarchical data or finding relationships within the same table.
+
+Example Table: employees
+Let's use a table employees where each employee might have a manager who is also an employee in the same table:
+
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    department VARCHAR(50),
+    manager_id INT
+);
+
+INSERT INTO employees (id, first_name, last_name, department, manager_id) VALUES
+(1, 'John', 'Doe', 'HR', NULL),  -- John has no manager (top-level)
+(2, 'Jane', 'Smith', 'Engineering', 1),  -- Jane is managed by John
+(3, 'Sam', 'Brown', 'Marketing', 1),  -- Sam is managed by John
+(4, 'Sue', 'Green', 'Engineering', 2),  -- Sue is managed by Jane
+(5, 'Mike', 'Johnson', 'HR', 2);  -- Mike is managed by Jane
+
+Self-Join Example
+Example 1: List Employees and Their Managers
+To list employees along with their manager's names:
+
+SELECT
+    e1.first_name AS employee_first_name,
+    e1.last_name AS employee_last_name,
+    e2.first_name AS manager_first_name,
+    e2.last_name AS manager_last_name
+FROM
+    employees e1
+LEFT JOIN
+    employees e2
+ON
+    e1.manager_id = e2.id;
+
+Explanation:
+e1 and e2 are aliases for the employees table.
+e1 represents the employee.
+e2 represents the manager.
+The LEFT JOIN ensures that employees without managers (i.e., manager_id is NULL) are still included in the results.
+
+Result
++---------------------+---------------------+---------------------+--------------------+
+| employee_first_name | employee_last_name  | manager_first_name  | manager_last_name  |
++---------------------+---------------------+---------------------+--------------------+
+| John                | Doe                 | NULL                | NULL               |
+| Jane                | Smith               | John                | Doe                |
+| Sam                 | Brown               | John                | Doe                |
+| Sue                 | Green               | Jane                | Smith              |
+| Mike                | Johnson             | Jane                | Smith              |
++---------------------+---------------------+---------------------+--------------------+
+In this result, each employee's manager is listed alongside their own details. Employees without a manager (e.g., John) have NULL values for manager details.
+
+-------------------------------------------------------
+
+VIEWS
+
+In SQL, a view is a virtual table based on the result of a query. Views can simplify complex queries, provide a layer of abstraction, and enhance security by restricting access to specific columns or rows.
+
+Creating a View
+Example Table: employees
+Let's use the employees table:
+
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    department VARCHAR(50),
+    salary DECIMAL(10, 2)
+);
+
+INSERT INTO employees (id, first_name, last_name, department, salary) VALUES
+(1, 'John', 'Doe', 'HR', 60000),
+(2, 'Jane', 'Smith', 'Engineering', 50000),
+(3, 'Sam', 'Brown', 'Marketing', 45000),
+(4, 'Sue', 'Green', 'Engineering', 70000),
+(5, 'Mike', 'Johnson', 'HR', 55000);
+
+Example 1: Simple View
+Create a view to display employee names and their departments:
+CREATE VIEW employee_view AS
+SELECT
+    first_name,
+    last_name,
+    department
+FROM
+    employees;
+
+Explanation:
+This view, employee_view, contains first_name, last_name, and department from the employees table.
+Querying the View
+SELECT * FROM employee_view;
+Result
++------------+-----------+-------------+
+| first_name | last_name | department  |
++------------+-----------+-------------+
+| John       | Doe       | HR          |
+| Jane       | Smith     | Engineering |
+| Sam        | Brown     | Marketing   |
+| Sue        | Green     | Engineering |
+| Mike       | Johnson   | HR          |
++------------+-----------+-------------+
+
+we can perform query on the view.
+
+----------------------------------------------------------------
+
+Indexing in SQL
+Indexing in SQL is a technique used to improve the performance of database queries. An index creates an entry for each value in a specified column, allowing the database to quickly locate rows that match the query conditions.
+
+Types of Indexes:
+Single-Column Index: An index on a single column.
+Composite Index: An index on two or more columns.
+Unique Index: Ensures that all values in the indexed column are unique.
+Full-Text Index: Used for text-search queries.
+
+Creating Indexes
+Single-Column Index
+CREATE INDEX idx_first_name ON employees(first_name);
+Explanation: Creates an index on the first_name column of the employees table.
+
+Composite Index
+CREATE INDEX idx_name_department ON employees(first_name, department);
+Explanation: Creates an index on both the first_name and department columns.
+
+Unique Index
+CREATE UNIQUE INDEX idx_unique_email ON employees(email);
+Explanation: Ensures that all values in the email column are unique.
+
+Full-Text Index
+CREATE FULLTEXT INDEX idx_fulltext_description ON products(description);
+Explanation: Creates a full-text index on the description column of the products table.
+
+Using Indexes in Queries
+When you perform queries on indexed columns, the database engine can use the index to locate data more quickly.
+
+Example Query Using Index
+SELECT * FROM employees WHERE first_name = 'John';
+Explanation: If first_name is indexed, this query will run faster because the database can quickly locate all rows where first_name is 'John'.
+
+Viewing Indexes
+To view the indexes on a table, you can use the following query:
+SHOW INDEX FROM employees;
+
+Dropping Indexes
+If an index is no longer needed, it can be dropped:
+DROP INDEX idx_first_name ON employees;
+
+Benefits of Indexing
+Faster Query Performance: Indexes speed up data retrieval.
+Efficient Sorting: Queries with ORDER BY clauses can be faster.
+Improved JOIN Operations: Joins between indexed columns are more efficient.
+
+Considerations
+Storage Overhead: Indexes require additional storage.
+Update Performance: Indexes can slow down INSERT, UPDATE, and DELETE operations because the index also needs to be updated.
+Selective Columns: Indexes are most beneficial on columns with high selectivity (a wide range of values).
+
+Indexes are powerful tools for optimizing SQL queries. They should be used thoughtfully, considering both the read and write performance impacts. Proper indexing can lead to significant performance improvements in database operations.
+
+---------------------------------------------------------------------------
+
+SUBQUERY
+
+Subqueries, or inner queries, are queries within another SQL query. They can be used in various clauses like SELECT, FROM, WHERE, and HAVING.
+
+1. Subquery in the WHERE Clause
+Find employees who earn more than the average salary.
+
+SELECT first_name, last_name, salary
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+
+Explanation: The subquery calculates the average salary, and the outer query selects employees earning more than that average.
+
+2. Subquery in the SELECT Clause
+Find the highest salary for each employee’s department.
+
+SELECT first_name, last_name, department, salary,
+       (SELECT MAX(salary) FROM employees e2 WHERE e1.department = e2.department) AS highest_salary
+FROM employees e1;
+
+Explanation: The subquery calculates the highest salary in each employee’s department and the outer query lists all employees along with that highest salary.
+
+3. Subquery in the FROM Clause
+Find the maximum salary in the company.
+
+SELECT MAX(salary)
+FROM (SELECT salary FROM employees) AS salaries;
+
+Explanation: The subquery selects the salary column, and the outer query finds the maximum salary in the company.
+
+4. Correlated Subquery
+Find employees whose salary is above the average salary of their department.
+
+SELECT first_name, last_name, department, salary
+FROM employees e1
+WHERE salary > (SELECT AVG(salary) 
+                FROM employees e2 
+                WHERE e1.department = e2.department);
+
+Explanation: The subquery calculates the average salary for the department of each employee in the outer query.
+
+5. Subquery with IN
+Find employees who work in the same department as 'John Doe'.
+
+SELECT first_name, last_name, department
+FROM employees
+WHERE department IN (SELECT department 
+                     FROM employees 
+                     WHERE first_name = 'John' AND last_name = 'Doe');
+
+Explanation: The subquery finds the department of 'John Doe', and the outer query selects employees in that department.
+
+6. Subquery with EXISTS
+Check if there are employees in the 'Marketing' department.
+
+SELECT 'There are employees in the Marketing department'
+WHERE EXISTS (SELECT 1 
+              FROM employees 
+              WHERE department = 'Marketing');
+
+Explanation: The subquery checks for the existence of employees in the 'Marketing' department.
+
+7. Subquery with NOT EXISTS
+Find departments without employees.
+
+SELECT department_name
+FROM departments d
+WHERE NOT EXISTS (SELECT 1 
+                  FROM employees e 
+                  WHERE d.department_name = e.department);
+
+Explanation: The subquery checks for the absence of employees in each department.
+
+--------------------------------------------------------------------
+
+GROUP BY and HAVING 
+
+The GROUP BY clause is used to group rows that have the same values in specified columns into summary rows. The HAVING clause is used to filter groups based on a specified condition, similar to how the WHERE clause filters rows.
+
+1. Using GROUP BY
+Find the total salary for each department.
+
+SELECT department, SUM(salary) AS total_salary
+FROM employees
+GROUP BY department;
+
+Explanation: This query groups employees by their department and calculates the total salary for each department.
+
+2. Using GROUP BY with COUNT
+Count the number of employees in each department.
+
+SELECT department, COUNT(*) AS num_employees
+FROM employees
+GROUP BY department;
+
+Explanation: This query counts the number of employees in each department.
+
+3. Using GROUP BY with AVG
+Find the average salary for each department.
+
+SELECT department, AVG(salary) AS average_salary
+FROM employees
+GROUP BY department;
+
+Explanation: This query calculates the average salary for each department.
+
+4. Using HAVING
+Find departments with a total salary greater than 100,000.
+
+SELECT department, SUM(salary) AS total_salary
+FROM employees
+GROUP BY department
+HAVING SUM(salary) > 100000;
+
+Explanation: This query groups employees by department, calculates the total salary for each department, and then filters the results to include only those departments with a total salary greater than 100,000.
+
+5. Using HAVING with COUNT
+Find departments with more than one employee.
+
+SELECT department, COUNT(*) AS num_employees
+FROM employees
+GROUP BY department
+HAVING COUNT(*) > 1;
+
+Explanation: This query counts the number of employees in each department and then filters the results to include only those departments with more than one employee.
+
+6. Using GROUP BY with Multiple Columns
+Find the total salary for each combination of department and first name.
+
+SELECT department, first_name, SUM(salary) AS total_salary
+FROM employees
+GROUP BY department, first_name;
+
+Explanation: This query groups employees by both their department and first name and calculates the total salary for each group.
+
+7. Using HAVING with Multiple Conditions
+Find departments with an average salary greater than 50,000 and more than one employee.
+
+SELECT department, AVG(salary) AS average_salary, COUNT(*) AS num_employees
+FROM employees
+GROUP BY department
+HAVING AVG(salary) > 50000 AND COUNT(*) > 1;
+
+Explanation: This query calculates the average salary and counts the number of employees in each department, then filters the results to include only those departments with an average salary greater than 50,000 and more than one employee.
+
+--------------------------------------------------------------
+
+ROLLUP  
+
+This will add an another row by giving grand total.. it used with group by.
+
+SELECT region, product, SUM(amount) AS total_amount
+FROM sales
+GROUP BY ROLLUP(region, product);
+
+Explanation:
+The ROLLUP(region, product) clause groups data first by region and then by product.
+It generates subtotals for each region and grand totals for all regions.
+
+Result
+| region | product  | total_amount |
+|--------|----------|--------------|
+| East   | ProductA |       3000.00|
+| East   | ProductB |       3500.00|
+| East   | NULL     |       6500.00| (Subtotal for East)
+| North  | ProductA |       1000.00|
+| North  | ProductB |       1500.00|
+| North  | NULL     |       2500.00| (Subtotal for North)
+| South  | ProductA |       2000.00|
+| South  | ProductB |       2500.00|
+| South  | NULL     |       4500.00| (Subtotal for South)
+| West   | ProductA |       4000.00|
+| West   | ProductB |       4500.00|
+| West   | NULL     |       8500.00| (Subtotal for West)
+| NULL   | NULL     |      22000.00| (Grand total)
+
+SELECT region, product, SUM(amount) AS total_amount
+FROM sales
+GROUP BY region WITH ROLLUP;
+
+region	product	total_amount
+East	ProductA	3000.00
+East	ProductB	3500.00
+East	NULL	6500.00
+North	ProductA	1000.00
+North	ProductB	1500.00
+North	NULL	2500.00
+South	ProductA	2000.00
+South	ProductB	2500.00
+South	NULL	4500.00
+West	ProductA	4000.00
+West	ProductB	4500.00
+West	NULL	8500.00
+NULL	NULL	22000.00
+
+Explanation
+The query groups by region and product with ROLLUP.
+For each region, it shows the product totals.
+After listing all products for a region, it shows the subtotal for that region (product is NULL).
+Finally, it shows the grand total across all regions and products (region and product are both NULL).
+
+-------------------------------------------------
+
+ON DELETE
+
+we cannot delete a data in table if the column is assosiated as foreign key with another table.
+in order to delete the data we can either do,
+
+SET foreign_key_checks=0; // this will make the table delete data if we use delete query
+SET foreign_key_checks=1;  // data will not be delete
+
+ON DELETE SET NULL - when a foreign key is deleted, replace the foreign key with null
+ON DELETE CASCADE  - when foreign key is deleted, delete the row
+
+Creating the Parent Table: departments
+
+CREATE TABLE departments (
+    id INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+INSERT INTO departments (id, name) VALUES
+(1, 'HR'),
+(2, 'Engineering'),
+(3, 'Marketing');
+
+Creating the Child Table: employees with a foreign key that uses ON DELETE SET NULL
+
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
+);
+
+INSERT INTO employees (id, first_name, last_name, department_id) VALUES
+(1, 'John', 'Doe', 1),
+(2, 'Jane', 'Smith', 2),
+(3, 'Sam', 'Brown', 3),
+(4, 'Sue', 'Green', 2);
+
+Example: Altering a Table to Add ON DELETE SET NULL
+If the employees table is already created without the ON DELETE SET NULL constraint, you can add it using the ALTER TABLE statement.
+
+Dropping the Existing Foreign Key Constraint
+(Assuming the foreign key constraint is named fk_department_id)
+
+ALTER TABLE employees
+DROP FOREIGN KEY fk_department_id;
+
+Adding the New Foreign Key Constraint with ON DELETE SET NULL
+
+ALTER TABLE employees
+ADD CONSTRAINT fk_department_id
+FOREIGN KEY (department_id)
+REFERENCES departments(id)
+ON DELETE SET NULL;
+
+Example Usage
+Current Data in Tables
+SELECT * FROM departments;
+
+| id | name        |
+|----|-------------|
+| 1  | HR          |
+| 2  | Engineering |
+| 3  | Marketing   |
+
+SELECT * FROM employees;
+
+| id | first_name | last_name | department_id |
+|----|------------|-----------|---------------|
+| 1  | John       | Doe       | 1             |
+| 2  | Jane       | Smith     | 2             |
+| 3  | Sam        | Brown     | 3             |
+| 4  | Sue        | Green     | 2             |
+
+Deleting a Department
+DELETE FROM departments WHERE id = 2;
+
+Resulting Data in Tables
+SELECT * FROM departments;
+
+| id | name      |
+|----|-----------|
+| 1  | HR        |
+| 3  | Marketing |
+
+SELECT * FROM employees;
+
+| id | first_name | last_name | department_id |
+|----|------------|-----------|---------------|
+| 1  | John       | Doe       | 1             |
+| 2  | Jane       | Smith     | NULL          | (department_id set to NULL)
+| 3  | Sam        | Brown     | 3             |
+| 4  | Sue        | Green     | NULL          | (department_id set to NULL)
+
+Similarly ON DELETE CASCADE
+
+--------------------------------------------------
+
+STORED PROCEDURES
+
+To store the query for using without re writing everytime.
+
+Ex: 
+DELIMITER $$   // In sql, it reads ; as end of the query so to make it understand that it is not end we specify our particular delimiter
+CREATE PROCEDURE getEmployees()
+BEGIN
+  SELECT * FROM employee;
+END$$
+DELIMITER ;
+
+after storing we can call it using
+
+CALL getEmployees();
+
+DROP PROCEDURE getEmployees();
+
+DELIMITER $$   
+CREATE PROCEDURE findEmployee(IN id int)
+BEGIN
+  SELECT * FROM employee  WHERE employee.id=id;
+END$$
+DELIMITER ;
+
+--------------------------------------------------
+
+TRIGGERS
+
+when a event happens, do something ie. (insert,update,delete) check data, handle errors etc.
+Create the employees Table
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    department_id INT
+);
+
+INSERT INTO employees (id, first_name, last_name, department_id) VALUES
+(1, 'John', 'Doe', 1),
+(2, 'Jane', 'Smith', 2);
+Create the employees_log Table
+This table will store the logs for inserted records.
+
+CREATE TABLE employees_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT,
+    action VARCHAR(50),
+    action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Create the Trigger
+The trigger will log each insert action into the employees_log table.
+
+CREATE TRIGGER after_employee_insert
+AFTER INSERT ON employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO employees_log (employee_id, action)
+    VALUES (NEW.id, 'INSERT');
+END;
+
+Insert Data into employees to Trigger the Trigger
+When you insert a new row into the employees table, the trigger will automatically add a log entry into the employees_log table.
+
+INSERT INTO employees (id, first_name, last_name, department_id) VALUES
+(3, 'Sam', 'Brown', 3);
+
+Check the Logs in employees_log
+Verify that the log entry has been created.
+
+SELECT * FROM employees_log;
+
+| log_id | employee_id | action | action_time         |
+|--------|-------------|--------|---------------------|
+| 1      | 3           | INSERT | 2024-07-31 10:00:00 |
+Explanation
+Trigger Definition:
+
+AFTER INSERT ON employees: The trigger is set to fire after an insert operation on the employees table.
+FOR EACH ROW: The trigger will execute for each row that is inserted.
+NEW.id: The NEW keyword refers to the new row being inserted. NEW.id is the id of the new employee.
+Trigger Action:
+
+INSERT INTO employees_log (employee_id, action) VALUES (NEW.id, 'INSERT');: This line inserts a new row into the employees_log table with the employee_id from the new row and an action description 'INSERT'.
+
