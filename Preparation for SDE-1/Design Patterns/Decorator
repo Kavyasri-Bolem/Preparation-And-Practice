@@ -1,0 +1,113 @@
+The Decorator Design Pattern allows behavior to be added to individual objects, either statically or dynamically, without affecting the behavior of other objects from the same class. This is useful for adhering to the Open/Closed Principle (OCP), which states that software entities should be open for extension but closed for modification.
+
+Example of Decorator Design Pattern
+Let's create an example of the Decorator Design Pattern using a simple coffee-making scenario. We'll define a base Coffee interface, a concrete implementation SimpleCoffee, and several decorators to add behavior.
+
+Step 1: Define the Coffee Interface
+public interface Coffee {
+    double cost();  // Returns the cost of the coffee
+    String description();  // Returns the description of the coffee
+}
+
+Step 2: Create a Concrete Implementation of Coffee
+public class SimpleCoffee implements Coffee {
+    @Override
+    public double cost() {
+        return 2.0;
+    }
+
+    @Override
+    public String description() {
+        return "Simple coffee";
+    }
+}
+
+Step 3: Create an Abstract Decorator Class
+public abstract class CoffeeDecorator implements Coffee {
+    protected Coffee decoratedCoffee;
+
+    public CoffeeDecorator(Coffee coffee) {
+        this.decoratedCoffee = coffee;
+    }
+
+    @Override
+    public double cost() {
+        return decoratedCoffee.cost();
+    }
+
+    @Override
+    public String description() {
+        return decoratedCoffee.description();
+    }
+}
+
+Step 4: Create Concrete Decorators
+public class MilkDecorator extends CoffeeDecorator {         //if we don't provide anything in abstract class wwe can use directly in concrete class by
+                                                            // private Coffee coffee;
+    public MilkDecorator(Coffee coffee) {                    
+        super(coffee);                                      //this.coffee=coffee;
+    }
+
+    @Override
+    public double cost() {
+        return super.cost() + 0.5;
+    }
+
+    @Override
+    public String description() {
+        return super.description() + ", milk";
+    }
+}
+
+public class SugarDecorator extends CoffeeDecorator {
+    public SugarDecorator(Coffee coffee) {
+        super(coffee);
+    }
+
+    @Override
+    public double cost() {
+        return super.cost() + 0.2;
+    }
+
+    @Override
+    public String description() {
+        return super.description() + ", sugar";
+    }
+}
+
+Step 5: Use the Decorators
+public class DecoratorPatternDemo {
+    public static void main(String[] args) {
+        Coffee coffee = new SimpleCoffee();
+        System.out.println(coffee.description() + " $" + coffee.cost());
+
+        coffee = new MilkDecorator(coffee);
+        System.out.println(coffee.description() + " $" + coffee.cost());
+
+        coffee = new SugarDecorator(coffee);
+        System.out.println(coffee.description() + " $" + coffee.cost());
+    }
+}
+
+Explanation
+SimpleCoffee: This is the basic implementation of the Coffee interface.
+CoffeeDecorator: This abstract class implements the Coffee interface and contains a reference to a Coffee object. It delegates calls to the decorated Coffee object.
+MilkDecorator and SugarDecorator: These classes extend CoffeeDecorator and add their specific behavior (i.e., adding milk or sugar to the coffee).
+DecoratorPatternDemo: This class demonstrates how to use the decorators to dynamically add behavior to a Coffee object.
+
+Output:
+Simple coffee $2.0
+Simple coffee, milk $2.5
+Simple coffee, milk, sugar $2.7
+  
+Advantages of Decorator Pattern
+Flexibility: Allows you to extend the functionality of objects dynamically without modifying their code.
+Adheres to OCP: Classes are open for extension but closed for modification.
+Combination of Behaviors: You can combine multiple decorators to create complex behavior.
+  
+Disadvantages of Decorator Pattern
+Complexity: Can lead to a large number of small classes that are difficult to manage.
+Performance: May introduce performance overhead due to the delegation.
+  
+Usage in Real-World Applications
+The Decorator Pattern is widely used in Java I/O classes (e.g., BufferedReader, InputStreamReader, FileReader). It allows adding additional responsibilities to objects in a flexible way.
