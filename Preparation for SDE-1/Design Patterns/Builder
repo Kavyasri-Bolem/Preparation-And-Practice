@@ -1,0 +1,168 @@
+The Builder Design Pattern is a creational design pattern that allows for the step-by-step creation of complex objects. It is useful when you need to create an object with multiple optional parameters or when you want to avoid a constructor with too many parameters.
+
+Example of Builder Design Pattern
+Let's create an example of a User class with the Builder Design Pattern in Java using Spring Boot.
+
+User Class with Builder:
+public class User {
+    private final String firstName;
+    private final String lastName;
+    private final int age;
+    private final String email;
+    private final String address;
+
+    private User(UserBuilder builder) {
+        this.firstName = builder.firstName;
+        this.lastName = builder.lastName;
+        this.age = builder.age;
+        this.email = builder.email;
+        this.address = builder.address;
+    }
+
+    // Getters
+
+    public static class UserBuilder {
+        private final String firstName;
+        private final String lastName;
+        private int age;
+        private String email;
+        private String address;
+
+        public UserBuilder(String firstName, String lastName) {
+            this.firstName = firstName;
+            this.lastName = lastName;
+        }
+
+        public UserBuilder age(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public UserBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public UserBuilder address(String address) {
+            this.address = address;
+            return this;
+        }
+
+        public User build() {
+            return new User(this);
+        }
+    }
+}
+
+Using the Builder in a Spring Boot Application:
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BuilderPatternDemoApplication implements CommandLineRunner {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BuilderPatternDemoApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        User user = new User.UserBuilder("John", "Doe")
+                .age(30)
+                .email("john.doe@example.com")
+                .address("123 Main St")
+                .build();
+
+        System.out.println("User Created: " + user);
+    }
+}
+
+Problems with the Builder Pattern
+Verbose Code:
+The Builder Pattern can lead to verbose code due to the creation of additional classes (e.g., UserBuilder).
+
+Immutability:
+If not designed properly, the resulting object may not be immutable, which can lead to potential issues with thread safety.
+
+Complexity:
+For simple objects, the Builder Pattern can add unnecessary complexity.
+
+Resolving Problems with the Builder Pattern
+Using Lombok:
+
+To reduce verbosity, you can use Lombok, which provides annotations to simplify the implementation of the Builder Pattern.
+
+import lombok.Builder;
+import lombok.ToString;
+
+@Builder
+@ToString
+public class User {
+    private final String firstName;
+    private final String lastName;
+    private final int age;
+    private final String email;
+    private final String address;
+}
+
+Ensuring Immutability:
+Make sure all fields in the class are final and do not provide setters, ensuring that the object is immutable once created.
+
+Appropriate Use:
+Use the Builder Pattern only for complex objects with multiple optional parameters. For simpler objects, constructors or factory methods may suffice.
+
+Live Demo
+You can create a Spring Boot application to demonstrate the Builder Pattern. Here’s the complete setup:
+
+Spring Boot Application:
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BuilderPatternDemoApplication implements CommandLineRunner {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BuilderPatternDemoApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        User user = User.builder()
+                .firstName("John")
+                .lastName("Doe")
+                .age(30)
+                .email("john.doe@example.com")
+                .address("123 Main St")
+                .build();
+
+        System.out.println("User Created: " + user);
+    }
+}
+
+User Class with Lombok:
+import lombok.Builder;
+import lombok.ToString;
+
+@Builder
+@ToString
+public class User {
+    private final String firstName;
+    private final String lastName;
+    private final int age;
+    private final String email;
+    private final String address;
+}
+
+Dependencies in pom.xml:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <scope>provided</scope>
+</dependency>
+This setup provides a complete example of using the Builder Design Pattern in a Spring Boot application while addressing common issues and providing solutions.
