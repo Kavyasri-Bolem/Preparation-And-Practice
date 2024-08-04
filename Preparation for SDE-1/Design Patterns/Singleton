@@ -1,0 +1,166 @@
+The Singleton Design Pattern ensures that a class has only one instance and provides a global point of access to it. Here's how you can implement the Singleton Design Pattern in Java, including a multithreading example.
+
+1. Singleton Design Pattern Using a Normal Class
+Basic Singleton Implementation
+public class Singleton {
+    // private static variable to hold the single instance of the class
+    private static Singleton instance;
+
+    // private constructor to prevent instantiation
+    private Singleton() {}
+
+    // public method to provide access to the instance
+    public static Singleton getInstance() {
+        if (instance == null) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+}
+
+Thread-Safe Singleton Implementation
+To make the Singleton thread-safe, you can use the synchronized keyword.
+public class Singleton {
+    private static Singleton instance;
+
+    private Singleton() {}
+
+    public static synchronized Singleton getInstance() {
+        if (instance == null) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+}
+
+Double-Checked Locking
+Double-checked locking reduces the overhead of acquiring a lock by first checking the locking criterion without synchronization.
+
+public class Singleton {
+    private static volatile Singleton instance;
+
+    private Singleton() {}
+
+    public static Singleton getInstance() {
+        if (instance == null) {
+            synchronized (Singleton.class) {
+                if (instance == null) {
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+
+2. Multithreading Example
+Let's create a multithreading example to demonstrate the Singleton pattern in action.
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class SingletonDemo {
+    public static void main(String[] args) {
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+        for (int i = 0; i < 10; i++) {
+            executorService.execute(() -> {
+                Singleton instance = Singleton.getInstance();
+                System.out.println("Instance hashcode: " + instance.hashCode());
+            });
+        }
+
+        executorService.shutdown();
+    }
+}
+
+3. Spring Boot Application
+To demonstrate the Singleton pattern within a Spring Boot application, you can create a simple Spring Boot application.
+
+Spring Boot Application
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+public class SingletonPatternDemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SingletonPatternDemoApplication.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner demo() {
+        return args -> {
+            ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+            for (int i = 0; i < 10; i++) {
+                executorService.execute(() -> {
+                    Singleton instance = Singleton.getInstance();
+                    System.out.println("Instance hashcode: " + instance.hashCode());
+                });
+            }
+
+            executorService.shutdown();
+        };
+    }
+}
+
+Singleton Class
+public class Singleton {
+    private static volatile Singleton instance;
+
+    private Singleton() {}
+
+    public static Singleton getInstance() {
+        if (instance == null) {
+            synchronized (Singleton.class) {
+                if (instance == null) {
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+
+Dependencies in pom.xml
+Ensure you have the Spring Boot starter dependency.
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter</artifactId>
+</dependency>
+
+Problems with the Singleton Pattern
+Concurrency Issues:
+If not implemented correctly, Singleton can have concurrency issues in a multithreaded environment.
+
+Testing Challenges:
+Singletons can make unit testing difficult as they maintain state between tests.
+
+Global State:
+Singletons introduce a global state into the application, which can lead to unintended dependencies and side effects.
+
+Resolving Problems with Singleton Pattern
+Use of Lazy Initialization with Double-Checked Locking:
+Ensures that Singleton is thread-safe without the overhead of synchronizing the getInstance method every time.
+
+Enum Singleton:
+Enums provide a simple and safe way to implement singletons.
+
+public enum SingletonEnum {
+    INSTANCE;
+    // methods
+}
+
+Dependency Injection:
+Use dependency injection frameworks like Spring to manage Singleton instances, which simplifies testing and reduces the need for manual Singleton implementation.
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope("singleton")
+public class SingletonBean {
+    // Singleton logic
+}
