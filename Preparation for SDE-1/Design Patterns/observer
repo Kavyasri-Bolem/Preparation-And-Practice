@@ -1,0 +1,145 @@
+The Observer Design Pattern is a behavioral pattern that allows an object (the subject) to notify other objects (the observers) about changes in its state. This pattern is useful for implementing distributed event-handling systems, where multiple objects need to be informed about events or changes happening in another object.
+
+Example of Observer Design Pattern
+Let's create an example where we have a weather station (the subject) that notifies different displays (the observers) when the weather data changes.
+
+Step 1: Define the Observer Interface
+public interface Observer {
+    void update(float temperature, float humidity, float pressure);
+}
+
+Step 2: Define the Subject Interface
+public interface Subject {
+    void registerObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
+}
+
+Step 3: Create the Weather Data Class (Subject)
+import java.util.ArrayList;
+import java.util.List;
+
+public class WeatherData implements Subject {
+    private List<Observer> observers;
+    private float temperature;
+    private float humidity;
+    private float pressure;
+
+    public WeatherData() {
+        observers = new ArrayList<>();
+    }
+
+    @Override
+    public void registerObserver(Observer o) {
+        observers.add(o);
+    }
+
+    @Override
+    public void removeObserver(Observer o) {
+        observers.remove(o);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update(temperature, humidity, pressure);
+        }
+    }
+
+    public void setMeasurements(float temperature, float humidity, float pressure) {
+        this.temperature = temperature;
+        this.humidity = humidity;
+        this.pressure = pressure;
+        measurementsChanged();
+    }
+
+    public void measurementsChanged() {
+        notifyObservers();
+    }
+}
+
+Step 4: Create Concrete Observer Classes
+public class CurrentConditionsDisplay implements Observer {
+    private float temperature;
+    private float humidity;
+    private Subject weatherData;
+
+    public CurrentConditionsDisplay(Subject weatherData) {
+        this.weatherData = weatherData;
+        weatherData.registerObserver(this);
+    }
+
+    @Override
+    public void update(float temperature, float humidity, float pressure) {
+        this.temperature = temperature;
+        this.humidity = humidity;
+        display();
+    }
+
+    public void display() {
+        System.out.println("Current conditions: " + temperature + "F degrees and " + humidity + "% humidity");
+    }
+}
+
+public class StatisticsDisplay implements Observer {
+    private float maxTemp = 0.0f;
+    private float minTemp = 200;
+    private float tempSum = 0.0f;
+    private int numReadings;
+    private Subject weatherData;
+
+    public StatisticsDisplay(Subject weatherData) {
+        this.weatherData = weatherData;
+        weatherData.registerObserver(this);
+    }
+
+    @Override
+    public void update(float temperature, float humidity, float pressure) {
+        tempSum += temperature;
+        numReadings++;
+
+        if (temperature > maxTemp) {
+            maxTemp = temperature;
+        }
+
+        if (temperature < minTemp) {
+            minTemp = temperature;
+        }
+
+        display();
+    }
+
+    public void display() {
+        System.out.println("Avg/Max/Min temperature = " + (tempSum / numReadings) + "/" + maxTemp + "/" + minTemp);
+    }
+}
+
+Step 5: Use the Pattern in the Main Application
+public class WeatherStation {
+    public static void main(String[] args) {
+        WeatherData weatherData = new WeatherData();
+
+        CurrentConditionsDisplay currentDisplay = new CurrentConditionsDisplay(weatherData);
+        StatisticsDisplay statisticsDisplay = new StatisticsDisplay(weatherData);
+
+        weatherData.setMeasurements(80, 65, 30.4f);
+        weatherData.setMeasurements(82, 70, 29.2f);
+        weatherData.setMeasurements(78, 90, 29.2f);
+    }
+}
+
+Explanation
+Observer Interface: Defines the update method, which will be called when the subject's state changes.
+Subject Interface: Defines methods to register, remove, and notify observers.
+WeatherData Class: Implements the Subject interface and maintains a list of observers. It notifies all registered observers when its state changes.
+Concrete Observer Classes: Implement the Observer interface. They register themselves with the subject and get updated when the subject's state changes.
+WeatherStation Main Application: Demonstrates how the pattern works by creating a WeatherData object and attaching different displays (observers) to it. When the weather data changes, all registered displays are updated and display the new data.
+
+Advantages of Observer Pattern
+Decoupling: Observers are decoupled from the subject, allowing for flexible and independent updates.
+Dynamic Relationships: Observers can be added or removed at runtime, allowing for dynamic relationships between objects.
+Reusable Components: Observers and subjects can be reused independently of each other.
+
+Disadvantages of Observer Pattern
+Complexity: Adding or removing observers can increase the complexity of the code.
+Performance: If not managed properly, the notification process can become inefficient, especially with a large number of observers.
