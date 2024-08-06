@@ -1,0 +1,90 @@
+The Factory Design Pattern is a creational pattern that provides an interface for creating objects in a superclass but allows subclasses to alter the type of objects that will be created. The Factory Method Pattern promotes loose coupling by eliminating the need to bind application-specific classes into the code. Thus, the code interacts solely with the interface or abstract class, making the code more flexible and reusable.
+
+Example of Factory Design Pattern
+Let's create an example where we have a Shape interface, and concrete classes Circle, Rectangle, and Square implement this interface. We then create a factory class ShapeFactory to generate objects of these concrete classes based on given information.
+
+Step 1: Define the Shape Interface
+public interface Shape {
+    void draw();
+}
+
+Step 2: Create Concrete Classes Implementing the Shape Interface
+public class Circle implements Shape {
+    @Override
+    public void draw() {
+        System.out.println("Inside Circle::draw() method.");
+    }
+}
+
+public class Rectangle implements Shape {
+    @Override
+    public void draw() {
+        System.out.println("Inside Rectangle::draw() method.");
+    }
+}
+
+public class Square implements Shape {
+    @Override
+    public void draw() {
+        System.out.println("Inside Square::draw() method.");
+    }
+}
+
+Step 3: Create the Factory Class
+public class ShapeFactory {
+    // Use getShape method to get an object of type Shape
+    public Shape getShape(String shapeType) {
+        if (shapeType == null) {
+            return null;
+        }
+        if (shapeType.equalsIgnoreCase("CIRCLE")) {
+            return new Circle();
+        } else if (shapeType.equalsIgnoreCase("RECTANGLE")) {
+            return new Rectangle();
+        } else if (shapeType.equalsIgnoreCase("SQUARE")) {
+            return new Square();
+        }
+        return null;
+    }
+}
+
+Step 4: Use the Factory to Get Object of Concrete Class by Passing Information
+public class FactoryPatternDemo {
+    public static void main(String[] args) {
+        ShapeFactory shapeFactory = new ShapeFactory();
+
+        // Get an object of Circle and call its draw method
+        Shape shape1 = shapeFactory.getShape("CIRCLE");
+        shape1.draw();
+
+        // Get an object of Rectangle and call its draw method
+        Shape shape2 = shapeFactory.getShape("RECTANGLE");
+        shape2.draw();
+
+        // Get an object of Square and call its draw method
+        Shape shape3 = shapeFactory.getShape("SQUARE");
+        shape3.draw();
+    }
+}
+
+Explanation
+Shape Interface: This interface declares a method draw that all concrete shapes must implement.
+Concrete Classes: Circle, Rectangle, and Square implement the Shape interface and provide their own implementations of the draw method.
+ShapeFactory: This factory class defines a method getShape that takes a string parameter indicating the type of shape and returns an instance of the corresponding concrete class.
+FactoryPatternDemo: This class demonstrates the usage of the factory pattern. It uses the ShapeFactory to get objects of different shapes and calls their draw method.
+
+Output
+Inside Circle::draw() method.
+Inside Rectangle::draw() method.
+Inside Square::draw() method.
+
+Advantages of Factory Pattern
+Encapsulation: The Factory Pattern encapsulates the creation of objects, which can reduce the complexity of the code.
+Loose Coupling: The client code does not need to know the specific class names of the objects it creates, only the interface.
+Code Reusability: Common code for creating objects is centralized in the factory, making it reusable.
+
+Disadvantages of Factory Pattern
+Complexity: The Factory Pattern can introduce additional complexity into the design.
+Maintenance: Changes in the creation process might require modifications to the factory class.
+
+The Factory Pattern is useful when the exact type of the objects to be created is not known in advance and must be determined at runtime. It helps in promoting loose coupling and enhancing flexibility in the code.
