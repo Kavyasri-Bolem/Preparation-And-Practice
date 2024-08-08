@@ -1,0 +1,174 @@
+Passing function as parameter 
+--------------------------------------
+1. create an interface
+2. instantiate a class that implements interface
+3. implement the method body of the interface, where method body = function body which you want to pass as parameter
+4. pass object of the concrete implementation of interface.
+
+Example: 
+1. consider a Hotel class containing pricing details and rating along with getters and setters
+2. HotelService class is used to add hotels
+3. If you want to filter the hotels based on price or rating you will write the code in hotel service i.e 
+
+private boolean isPriceLess(int price,Hotel hotel){
+  return hotel.getPrice()<price;
+}
+public List<Hotel> filterHotelByPrice(int price){
+List<hotels> filtered=new ArrayList<>();
+  for(Hotel hotel:hotels){
+    if(isPriceLess(price,hotel)
+      filtered.add(hotel);
+  }
+return filtered;
+}
+private boolean is5Star(Hotel hotel){
+  return hotel.getRating()==HotelType.FIVE_STAR;
+}
+public List<Hotel> filterHotelByPrice(int price){
+List<hotels> filtered=new ArrayList<>();
+  for(Hotel hotel:hotels){
+    if(is5Star(hotel)
+      filtered.add(hotel);
+  }
+return filtered;
+}
+
+except the filtering condition remaining code is same and repeating. instead of passing parameters to the method we can directly pass the filter condition.
+
+create filteringCondition interface with abstract boolean method i.e test
+interface FilteringCondition(){
+  abstract boolean test(Hotel hotel);
+}
+
+create filteringContidition implementing class
+class isPriceLessThan2000 implements FilteringCondition{
+  public boolean test(Hotel hotel){
+    return hotel.getPrice()<2000;
+  }
+}
+similary can create any number of class that you want for filtering condition
+
+In hotel service you need to pass this condition as parameter i.e
+public List<Hotel> filterHotels(FilteringCondition filteringCondition){
+List<hotels> filtered=new ArrayList<>();
+  for(Hotel hotel:hotels){
+    if(filteringCondition.test(hotel)
+      filtered.add(hotel);
+  }
+return filtered;
+}
+
+Now in main class you can call the hotelservice and pass filtersclass as parameters
+class main{
+  HotelService hotelService=new HotelService();
+  List<Hotel> hhotels=hotelService.filterHotels(new isPriceLessThan2000());
+}
+
+
+-------------------------------------------------------------------------
+Anonymous Inner Class
+-------------------------------------------------------------------------
+Instead of creating sepearte class like above we can directly pass the instance of class as parameter and need to implements all the methods of interface i.e
+class main{
+  HotelService hotelService=new HotelService();
+  List<Hotel> hhotels=hotelService.filterHotels(new FilterCondition(){
+      public boolean test(Hotel hotel){
+        return hotel.getPrice()<2000;
+      }
+    }
+  );
+}
+
+------------------------------------------------------------------------
+lambda Expression
+------------------------------------------------------------------------
+for the above example instead of instanting to pass test function as parameter we can directly write
+class main{
+  HotelService hotelService=new HotelService();
+  List<Hotel> hhotels=hotelService.filterHotels((Hotel hotel)->{
+        return hotel.getPrice()<2000;
+    });
+}
+
+write lambda expression by passing the parameter and the code for codition. what this will do is it will put the code in method of interface that is used in filterhotels method
+
+if there are more than one abstract method in interface, the lambda expression will confused, in which method it should put the code. that why we can create only one abstract method in interface which we use for lambda, can have any number of default and static methods. such interface is called functional interface
+--------------------------------------------------------------------------
+Comporator
+----------------------------------------------------------------------------
+it is a functional interface. only compare method is abstarct method which we are introducing. it also contains equals method which is also public and abstract but it not the class we are introducing, it is inherited from the parent class Object.
+
+List<Integer> lst=List.of(1,2,3,4,5);
+collections.sort(lst,(Integer a,Integer b)->{return b-a;});
+
+even we don't need to give the type in parameter, it will automatically check for type i.e collections.sort(lst,(a,b)->{return b-a;});
+
+Runnable is also a functional interface
+
+---------------------------------------------------------------------------
+The this Context and using Local Variables
+---------------------------------------------------------------------------
+the this keyword used inside lambda expression belongs to the class that expression present in
+
+class main{
+  int field;
+  public List method(){
+    HotelService hotelService=new HotelService();
+    FilteringCondition lambdaExp= hotel -> hotel.getPrice<2000;
+    return hotelService.filterHotels(lambdaExp)   //we can pass the reference like this
+  }
+}
+
+class main{
+  int field;
+  public List method(){
+    HotelService hotelService=new HotelService();
+    FilteringCondition lambdaExp= hotel ->{
+      this.field=  // this belongs to main class
+      return hotel.getPrice<2000;
+    };
+    return hotelService.filterHotels(lambdaExp)   //we can pass the reference like this
+  }
+}
+
+the local variables of a class can not be modified by lambda expressions.
+
+---------------------------------------------------------------
+we have inbuilt functional interfaces provide by java...
+one of the interface that we can use in place of filteringCondition interface is Predicate(Used when you want to return boolean values)
+
+Combining Predicates:
+Predicate<Integer> divBy2 = no -> no%2==0;
+Predicate<Integer> divBy3 = no -> no%3==0;
+Predicate<Integer> divBy6 = no -> divBy2.and(divBy3);  //using 2 predicates this will return a predicate
+System.out.println(divBy6.test(6));
+
+Consumer:
+it will just consume the data will mot do any thing.
+Consumer<Integer> consumer= a -> System.out.println(a);
+lst.forEach(consumer);  //prints the elements in list
+
+Supplier:
+It will give the output without taking input
+Supplier<Integer> supplier=()->Math.random();
+System.out.println(supplier.get());
+
+Function:
+Function<String,Integer> strLen=string->string.length();
+System.out.println(strLen.apply("kavya"));
+
+Function<Integer,Integer> multi=a->a*a;
+Function<Integer,Integer> add=a->a+a;
+Integer output=multi.andThen(add).apply(3);
+
+for predicate, we have intPredicate,doublePredicate etc.. such that these interfaces are for premitive data types which unboxing and boxing doesn't require as predicate interface do. which will improve performance
+intPredicate divBy2 = no -> no%2==0;  similiarly for supplier,consumer
+-----------------------------------------------------------------
+Method Reference
+--------------------------------------------------------------
+lst.forEach(a -> System.out.println(a));
+can be written as 
+lst.forEach(System.out::println);
+compiler will do the same as in 1st line 
+syntax: className::staticMethod
+
