@@ -141,8 +141,6 @@ ALTER TABLE employees ADD CONSTRAINT check_salary CHECK (salary > 0); //adding c
 JOINS
 
 departments
-sql
-Copy code
 CREATE TABLE departments (
     id INT PRIMARY KEY,
     name VARCHAR(100) NOT NULL
@@ -152,9 +150,8 @@ INSERT INTO departments (id, name) VALUES
 (1, 'HR'),
 (2, 'Engineering'),
 (3, 'Marketing');
+
 employees
-sql
-Copy code
 CREATE TABLE employees (
     id INT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
